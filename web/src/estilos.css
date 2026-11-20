@@ -132,7 +132,7 @@ h2 {
   display: flex;
   align-items: center;
   gap: 24px;
-  padding: 0 clamp(16px, 4vw, 40px);
+  padding: 0 max(clamp(16px, 4vw, 40px), calc((100% - 1320px) / 2));
   min-height: 80px;
   background: rgba(248, 247, 243, 0.97);
   backdrop-filter: blur(12px);
@@ -219,7 +219,7 @@ h2 {
 }
 
 .contenido {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 40px) 80px;
 }
@@ -293,6 +293,7 @@ h2 {
 .enlace-flecha {
   display: inline-block;
   margin-top: 16px;
+  padding-top: 12px;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -307,8 +308,10 @@ h2 {
 }
 
 .volver {
-  display: inline-block;
-  margin-bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-bottom: 8px;
   color: var(--muted);
   text-decoration: none;
   font-weight: 700;
@@ -822,6 +825,7 @@ a.cifra:hover {
 
 .paginacion {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 16px;
@@ -1051,5 +1055,183 @@ fieldset {
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
+  }
+}
+
+.aviso-invitado {
+  margin: 0;
+  padding: 10px clamp(16px, 4vw, 40px);
+  background: var(--ambar-claro);
+  border-bottom: 1px solid #efd9a3;
+  color: #5c4500;
+  font-size: 13px;
+  text-align: center;
+}
+
+.entrar-invitado {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.entrar-invitado p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.entrar-invitado strong {
+  color: var(--ink);
+}
+
+.entrar-invitado .boton {
+  width: 100%;
+}
+
+@media (max-width: 680px) {
+  .tabla-movimientos thead,
+  .tabla-tallas thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .tabla-movimientos,
+  .tabla-movimientos tbody,
+  .tabla-tallas,
+  .tabla-tallas tbody {
+    display: block;
+  }
+
+  .tabla-movimientos tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'producto cambio'
+      'tipo cambio'
+      'talla queda'
+      'motivo motivo'
+      'fecha usuario';
+    gap: 4px 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tabla-movimientos td,
+  .tabla-tallas td,
+  .tabla-tallas th {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+
+  .tabla-movimientos .col-producto {
+    grid-area: producto;
+    font-weight: 700;
+  }
+
+  .tabla-movimientos .col-tipo {
+    grid-area: tipo;
+  }
+
+  .tabla-movimientos .col-cambio {
+    grid-area: cambio;
+    align-self: center;
+    font-size: 20px;
+  }
+
+  .tabla-movimientos .col-talla {
+    grid-area: talla;
+  }
+
+  .tabla-movimientos .col-queda {
+    grid-area: queda;
+  }
+
+  .tabla-movimientos .col-talla::before {
+    content: 'Talla ';
+    color: var(--muted);
+  }
+
+  .tabla-movimientos .col-queda::before {
+    content: 'Queda ';
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .tabla-movimientos .col-motivo {
+    grid-area: motivo;
+  }
+
+  .tabla-movimientos .col-fecha {
+    grid-area: fecha;
+    font-size: 12px;
+  }
+
+  .tabla-movimientos .col-usuario {
+    grid-area: usuario;
+    font-size: 12px;
+    text-align: right;
+  }
+
+  .tabla-tallas tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'talla estado'
+      'unidades unidades'
+      'minimo minimo';
+    gap: 8px 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tabla-tallas .col-talla {
+    grid-area: talla;
+    font-size: 16px;
+  }
+
+  .tabla-tallas .col-estado {
+    grid-area: estado;
+  }
+
+  .tabla-tallas .col-unidades {
+    grid-area: unidades;
+    text-align: left !important;
+  }
+
+  .tabla-tallas .col-unidades::before {
+    content: 'Unidades: ';
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  .tabla-tallas .col-minimo {
+    grid-area: minimo;
+  }
+
+  .tabla-tallas .col-minimo::before {
+    content: 'Avisar desde';
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .minimo {
+    flex-wrap: wrap;
+  }
+
+  .paginacion .boton {
+    padding: 0 14px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dos-columnas {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

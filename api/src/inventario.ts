@@ -253,28 +253,37 @@ function calcularCambio(datos: NuevoMovimiento, actual: number): number {
   return -cantidad;
 }
 
-export async function registrarMovimiento(pool: Pool, datos: NuevoMovimiento, usuario: string): Promise<Movimiento> {
-  return enTransaccion(pool, async (cliente) => {
-    const existencia = await existenciaBloqueada(cliente, datos.productoId, datos.tallaId);
-    const cambio = calcularCambio(datos, existencia.cantidad);
-    const resultante = existencia.cantidad + cambio;
-    await cliente.query('UPDATE inventario.existencias SET cantidad = $1, actualizado = NOW() WHERE id = $2', [
-      resultante,
-      existencia.id,
-    ]);
-    const { rows } = await cliente.query<{ id: number }>(
-      `INSERT INTO inventario.movimientos
-         (existencia_id, tipo, condicion, unidades, cantidad, stock_resultante, motivo, usuario)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id::int AS id`,
-      [existencia.id, datos.tipo, datos.condicion, datos.cantidad, cambio, resultante, datos.motivo, usuario],
-    );
-    const { rows: movimientos } = await cliente.query<Movimiento>(`${SELECT_MOVIMIENTOS} WHERE m.id = $1`, [
-      rows[0]?.id,
-    ]);
-    const movimiento = movimientos[0];
-    if (!movimiento) throw new ErrorNegocio(500, 'No se pudo registrar el movimiento');
-    return movimiento;
-  });
+export async function registrarMovimiento(
+  pool: Pool,
+  datos: NuevoMovimiento,
+  usuario: string,
+  simular = false,
+): Promise<Movimiento> {
+  return enTransaccion(
+    pool,
+    async (cliente) => {
+      const existencia = await existenciaBloqueada(cliente, datos.productoId, datos.tallaId);
+      const cambio = calcularCambio(datos, existencia.cantidad);
+      const resultante = existencia.cantidad + cambio;
+      await cliente.query('UPDATE inventario.existencias SET cantidad = $1, actualizado = NOW() WHERE id = $2', [
+        resultante,
+        existencia.id,
+      ]);
+      const { rows } = await cliente.query<{ id: number }>(
+        `INSERT INTO inventario.movimientos
+           (existencia_id, tipo, condicion, unidades, cantidad, stock_resultante, motivo, usuario)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id::int AS id`,
+        [existencia.id, datos.tipo, datos.condicion, datos.cantidad, cambio, resultante, datos.motivo, usuario],
+      );
+      const { rows: movimientos } = await cliente.query<Movimiento>(`${SELECT_MOVIMIENTOS} WHERE m.id = $1`, [
+        rows[0]?.id,
+      ]);
+      const movimiento = movimientos[0];
+      if (!movimiento) throw new ErrorNegocio(500, 'No se pudo registrar el movimiento');
+      return movimiento;
+    },
+    simular,
+  );
 }
 
 export const nuevoMinimo = z.object({
@@ -283,18 +292,26 @@ export const nuevoMinimo = z.object({
   minimo: z.number().int().min(0).max(10_000),
 });
 
-export async function cambiarMinimo(pool: Pool, datos: z.infer<typeof nuevoMinimo>): Promise<TallaStock> {
-  return enTransaccion(pool, async (cliente) => {
-    const existencia = await existenciaBloqueada(cliente, datos.productoId, datos.tallaId);
-    await cliente.query('UPDATE inventario.existencias SET minimo = $1, actualizado = NOW() WHERE id = $2', [
-      datos.minimo,
-      existencia.id,
-    ]);
-    const [producto] = agrupar(await filasStock(cliente, 'WHERE p.id = $1', [datos.productoId]));
-    const talla = producto?.tallas.find((t) => t.tallaId === datos.tallaId);
-    if (!talla) throw new ErrorNegocio(500, 'No se pudo leer el stock');
-    return talla;
-  });
+export async function cambiarMinimo(
+  pool: Pool,
+  datos: z.infer<typeof nuevoMinimo>,
+  simular = false,
+): Promise<TallaStock> {
+  return enTransaccion(
+    pool,
+    async (cliente) => {
+      const existencia = await existenciaBloqueada(cliente, datos.productoId, datos.tallaId);
+      await cliente.query('UPDATE inventario.existencias SET minimo = $1, actualizado = NOW() WHERE id = $2', [
+        datos.minimo,
+        existencia.id,
+      ]);
+      const [producto] = agrupar(await filasStock(cliente, 'WHERE p.id = $1', [datos.productoId]));
+      const talla = producto?.tallas.find((t) => t.tallaId === datos.tallaId);
+      if (!talla) throw new ErrorNegocio(500, 'No se pudo leer el stock');
+      return talla;
+    },
+    simular,
+  );
 }
 
 export async function listarMovimientos(pool: Pool, filtros: FiltrosMovimientos) {

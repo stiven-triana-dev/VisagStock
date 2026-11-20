@@ -19,3 +19,5 @@ services:
         sync: false
       - key: JWT_SECRETO
         generateValue: true
+      - key: DEMO_ACTIVO
+        value: "true"

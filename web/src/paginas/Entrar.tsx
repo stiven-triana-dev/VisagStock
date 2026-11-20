@@ -1,24 +1,30 @@
 import { useState, type FormEvent } from 'react';
+import { useDatos } from '../api';
 import { Aviso } from '../componentes/comunes';
 import { useSesion } from '../sesion';
 
 export function Entrar() {
-  const { entrar } = useSesion();
+  const { entrar, entrarComoInvitado } = useSesion();
+  const { datos: invitado } = useDatos<{ activo: boolean }>('/invitado');
   const [usuario, setUsuario] = useState('');
   const [clave, setClave] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  async function enviar(evento: FormEvent) {
-    evento.preventDefault();
+  async function intentar(accion: () => Promise<void>) {
     setError(null);
     setEnviando(true);
     try {
-      await entrar(usuario.trim(), clave);
+      await accion();
     } catch (causa) {
       setError(causa instanceof Error ? causa.message : 'No se pudo iniciar sesión');
       setEnviando(false);
     }
+  }
+
+  function enviar(evento: FormEvent) {
+    evento.preventDefault();
+    void intentar(() => entrar(usuario.trim(), clave));
   }
 
   return (
@@ -55,6 +61,22 @@ export function Entrar() {
             {enviando ? 'Entrando…' : 'Entrar ↗'}
           </button>
         </form>
+        {invitado?.activo && (
+          <div className="entrar-invitado">
+            <p>
+              <strong>¿Vienes a ver el proyecto?</strong> Entra sin contraseña y prueba todo. Los cambios no se
+              guardan.
+            </p>
+            <button
+              type="button"
+              className="boton boton-claro"
+              disabled={enviando}
+              onClick={() => void intentar(entrarComoInvitado)}
+            >
+              Entrar como invitado ↗
+            </button>
+          </div>
+        )}
       </section>
     </main>
   );

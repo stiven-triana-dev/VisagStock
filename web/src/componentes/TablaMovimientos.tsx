@@ -11,7 +11,7 @@ interface Props {
 export function TablaMovimientos({ movimientos, compacta = false, sinProducto = false }: Props) {
   return (
     <div className="tabla-envoltura">
-      <table className="tabla">
+      <table className="tabla tabla-movimientos">
         <thead>
           <tr>
             <th scope="col">Fecha</th>
@@ -31,14 +31,14 @@ export function TablaMovimientos({ movimientos, compacta = false, sinProducto = 
         <tbody>
           {movimientos.map((movimiento) => (
             <tr key={movimiento.id}>
-              <td className="tenue">{fecha(movimiento.fecha)}</td>
+              <td className="tenue col-fecha">{fecha(movimiento.fecha)}</td>
               {!sinProducto && (
-                <td>
+                <td className="col-producto">
                   <Link to={`/productos/${movimiento.productoId}`}>{movimiento.producto}</Link>
                 </td>
               )}
-              <td>{movimiento.talla}</td>
-              <td>
+              <td className="col-talla">{movimiento.talla}</td>
+              <td className="col-tipo">
                 <span className={`tipo tipo-${movimiento.tipo}`}>{TIPOS[movimiento.tipo]}</span>
                 {movimiento.condicion && (
                   <span className={`condicion condicion-${movimiento.condicion}`}>
@@ -46,12 +46,14 @@ export function TablaMovimientos({ movimientos, compacta = false, sinProducto = 
                   </span>
                 )}
               </td>
-              <td className={`numero ${movimiento.cantidad < 0 ? 'resta' : movimiento.cantidad > 0 ? 'suma' : 'tenue'}`}>
+              <td
+                className={`numero col-cambio ${movimiento.cantidad < 0 ? 'resta' : movimiento.cantidad > 0 ? 'suma' : 'tenue'}`}
+              >
                 {cambio(movimiento.cantidad)}
               </td>
-              <td className="numero">{movimiento.stockResultante}</td>
-              {!compacta && <td>{movimiento.motivo}</td>}
-              {!compacta && <td className="tenue">{movimiento.usuario}</td>}
+              <td className="numero col-queda">{movimiento.stockResultante}</td>
+              {!compacta && <td className="col-motivo">{movimiento.motivo}</td>}
+              {!compacta && <td className="tenue col-usuario">{movimiento.usuario}</td>}
             </tr>
           ))}
         </tbody>

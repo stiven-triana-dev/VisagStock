@@ -7,6 +7,10 @@ const esquema = z.object({
   JWT_SECRETO: z.string().min(32),
   PORT: z.coerce.number().int().positive().default(4000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  DEMO_ACTIVO: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((valor) => valor === 'true'),
 });
 
 export type Config = z.infer<typeof esquema>;

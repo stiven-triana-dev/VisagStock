@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { Config } from './config.js';
 
 export const COOKIE = 'visagstock_sesion';
+export const USUARIO_INVITADO = 'invitado';
 const DURACION_HORAS = 8;
 
 export const credenciales = z.object({
@@ -28,8 +29,13 @@ function opcionesCookie(config: Config) {
   return { httpOnly: true, sameSite: 'strict' as const, secure: config.NODE_ENV === 'production', path: '/' };
 }
 
-export function emitirSesion(res: Response, config: Config, usuario: string): void {
-  const token = jwt.sign({ sub: usuario }, config.JWT_SECRETO, {
+export interface Sesion {
+  usuario: string;
+  invitado: boolean;
+}
+
+export function emitirSesion(res: Response, config: Config, usuario: string, invitado = false): void {
+  const token = jwt.sign({ sub: usuario, invitado }, config.JWT_SECRETO, {
     algorithm: 'HS256',
     expiresIn: `${DURACION_HORAS}h`,
     issuer: 'visagstock',
@@ -41,12 +47,13 @@ export function cerrarSesion(res: Response, config: Config): void {
   res.clearCookie(COOKIE, opcionesCookie(config));
 }
 
-export function usuarioDeSesion(req: Request, config: Config): string | null {
+export function sesionDe(req: Request, config: Config): Sesion | null {
   const token: unknown = req.cookies?.[COOKIE];
   if (typeof token !== 'string') return null;
   try {
     const datos = jwt.verify(token, config.JWT_SECRETO, { algorithms: ['HS256'], issuer: 'visagstock' });
-    return typeof datos === 'object' && typeof datos.sub === 'string' ? datos.sub : null;
+    if (typeof datos !== 'object' || typeof datos.sub !== 'string') return null;
+    return { usuario: datos.sub, invitado: datos.invitado === true };
   } catch {
     return null;
   }
@@ -54,12 +61,13 @@ export function usuarioDeSesion(req: Request, config: Config): string | null {
 
 export function exigirSesion(config: Config) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const usuario = usuarioDeSesion(req, config);
-    if (!usuario) {
+    const sesion = sesionDe(req, config);
+    if (!sesion) {
       res.status(401).json({ error: 'Inicia sesión para continuar' });
       return;
     }
-    res.locals.usuario = usuario;
+    res.locals.usuario = sesion.usuario;
+    res.locals.invitado = sesion.invitado;
     next();
   };
 }

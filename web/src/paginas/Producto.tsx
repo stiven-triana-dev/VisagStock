@@ -47,7 +47,7 @@ export function Producto() {
 
           <h2>Unidades por talla</h2>
           <div className="tabla-envoltura">
-            <table className="tabla">
+            <table className="tabla tabla-tallas">
               <thead>
                 <tr>
                   <th scope="col">Talla</th>
@@ -61,9 +61,11 @@ export function Producto() {
               <tbody>
                 {producto.tallas.map((talla) => (
                   <tr key={talla.tallaId ?? 'unica'}>
-                    <th scope="row">{talla.talla}</th>
-                    <td className="numero fuerte">{talla.cantidad}</td>
-                    <td>
+                    <th scope="row" className="col-talla">
+                      {talla.talla}
+                    </th>
+                    <td className="numero fuerte col-unidades">{talla.cantidad}</td>
+                    <td className="col-minimo">
                       <Minimo
                         key={`${talla.tallaId}-${talla.minimo}`}
                         productoId={producto.id}
@@ -71,7 +73,7 @@ export function Producto() {
                         alGuardar={recargar}
                       />
                     </td>
-                    <td>
+                    <td className="col-estado">
                       <Insignia estado={talla.estado} />
                     </td>
                   </tr>

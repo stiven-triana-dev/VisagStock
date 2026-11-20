@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { crearApp } from '../src/app.js';
 import { configPrueba, hayBase, prepararEntorno, type Entorno } from './ayuda.js';
 
 describe.skipIf(!hayBase)('API de VisagStock', () => {
@@ -260,5 +261,69 @@ describe.skipIf(!hayBase)('API de VisagStock', () => {
     const respuesta = await request(entorno.app).get('/api/no-existe');
     expect(respuesta.status).toBe(404);
     expect(respuesta.body.error).toBe('Ruta no encontrada');
+  });
+  describe('invitado', () => {
+    async function entrarComoInvitado() {
+      const respuesta = await request(entorno.app).post('/api/sesion/invitado');
+      expect(respuesta.status).toBe(200);
+      return String(respuesta.headers['set-cookie']?.[0] ?? '').split(';')[0] ?? '';
+    }
+
+    it('avisa que la cuenta de invitado está activa', async () => {
+      const respuesta = await request(entorno.app).get('/api/invitado');
+      expect(respuesta.body).toEqual({ activo: true });
+    });
+
+    it('entra sin contraseña y la sesión dice que es invitado', async () => {
+      const cookie = await entrarComoInvitado();
+      const respuesta = await request(entorno.app).get('/api/sesion').set('Cookie', cookie);
+      expect(respuesta.body).toEqual({ usuario: 'invitado', invitado: true });
+    });
+
+    it('prueba un movimiento completo pero no lo guarda', async () => {
+      const cookie = await entrarComoInvitado();
+      const respuesta = await request(entorno.app)
+        .post('/api/movimientos')
+        .set('Cookie', cookie)
+        .send({ productoId: 'p003', tallaId: null, tipo: 'ingreso', cantidad: 5, motivo: 'Compra a proveedor' });
+      expect(respuesta.status).toBe(200);
+      expect(respuesta.body).toMatchObject({ simulado: true, cantidad: 5, stockResultante: 5, usuario: 'invitado' });
+      const detalle = await request(entorno.app).get('/api/productos/p003').set('Cookie', galleta);
+      expect(detalle.body.producto.total).toBe(0);
+      expect(detalle.body.movimientos).toEqual([]);
+    });
+
+    it('sigue validando el stock aunque no guarde', async () => {
+      const cookie = await entrarComoInvitado();
+      const respuesta = await request(entorno.app)
+        .post('/api/movimientos')
+        .set('Cookie', cookie)
+        .send({ productoId: 'p003', tallaId: null, tipo: 'despacho', cantidad: 1, motivo: 'Venta en tienda' });
+      expect(respuesta.status).toBe(409);
+    });
+
+    it('prueba el mínimo de una talla sin cambiarlo', async () => {
+      const cookie = await entrarComoInvitado();
+      const respuesta = await request(entorno.app)
+        .put('/api/minimos')
+        .set('Cookie', cookie)
+        .send({ productoId: 'p003', tallaId: null, minimo: 7 });
+      expect(respuesta.body).toMatchObject({ minimo: 7, simulado: true });
+      const detalle = await request(entorno.app).get('/api/productos/p003').set('Cookie', galleta);
+      expect(detalle.body.producto.tallas[0].minimo).toBe(2);
+    });
+
+    it('el administrador sí guarda y no queda marcado como simulado', async () => {
+      const respuesta = await mover({ productoId: 'p003', tallaId: null, tipo: 'ingreso', cantidad: 2, motivo: 'Compra' });
+      expect(respuesta.status).toBe(201);
+      expect(respuesta.body.simulado).toBe(false);
+    });
+
+    it('no deja entrar como invitado si está desactivado', async () => {
+      const app = crearApp(entorno.pool, { ...configPrueba, DEMO_ACTIVO: false });
+      const respuesta = await request(app).post('/api/sesion/invitado');
+      expect(respuesta.status).toBe(404);
+      expect(respuesta.headers['set-cookie']).toBeUndefined();
+    });
   });
 });

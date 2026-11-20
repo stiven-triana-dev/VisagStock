@@ -8,7 +8,7 @@ const ENLACES = [
 ];
 
 export function Marco() {
-  const { usuario, salir } = useSesion();
+  const { usuario, invitado, salir } = useSesion();
   return (
     <>
       <a className="saltar" href="#contenido">
@@ -36,6 +36,12 @@ export function Marco() {
           </button>
         </div>
       </header>
+      {invitado && (
+        <p className="aviso-invitado" role="status">
+          <strong>Modo invitado.</strong> Puedes probar todo: el sistema valida y calcula cada movimiento, pero no guarda
+          los cambios.
+        </p>
+      )}
       <main id="contenido" className="contenido" tabIndex={-1}>
         <Outlet />
       </main>

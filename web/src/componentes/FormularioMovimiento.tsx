@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { ErrorApi, pedir } from '../api';
 import { CONDICIONES, quedan, TIPOS, unidades } from '../formato';
+import { useSesion } from '../sesion';
 import type { Condicion, Movimiento, ProductoStock, TipoMovimiento } from '../tipos';
 import { Aviso } from './comunes';
 
@@ -40,7 +41,18 @@ function calcular(tipo: TipoMovimiento, condicion: Condicion | null, actual: num
   return actual - valor;
 }
 
+function mensajeSimulado(movimiento: Movimiento): string {
+  const donde = movimiento.tallaId === null ? 'el producto' : `la talla ${movimiento.talla}`;
+  const total = unidades(movimiento.stockResultante);
+  const resultado =
+    movimiento.condicion === 'danada'
+      ? `La prenda dañada no vuelve a la venta y ${donde} seguiría con ${total}.`
+      : `Así quedaría ${donde}: ${total}.`;
+  return `Prueba correcta. ${resultado} Como invitado, no se guarda.`;
+}
+
 export function FormularioMovimiento({ producto, alGuardar }: Props) {
+  const { invitado } = useSesion();
   const [tallaId, setTallaId] = useState<number | null>(producto.tallas[0]?.tallaId ?? null);
   const [tipo, setTipo] = useState<TipoMovimiento>('ingreso');
   const [condicion, setCondicion] = useState<Condicion | null>(null);
@@ -107,6 +119,10 @@ export function FormularioMovimiento({ producto, alGuardar }: Props) {
           motivo: motivo.trim(),
         },
       });
+      if (movimiento.simulado) {
+        setExito(mensajeSimulado(movimiento));
+        return;
+      }
       setCantidad('');
       setMotivo('');
       setCondicion(null);
@@ -230,7 +246,7 @@ export function FormularioMovimiento({ producto, alGuardar }: Props) {
       {exito && <Aviso tipo="exito">{exito}</Aviso>}
 
       <button type="submit" className="boton boton-oscuro" disabled={enviando || !listo}>
-        {enviando ? 'Guardando…' : `Registrar ${TIPOS[tipo].toLowerCase()} ↗`}
+        {enviando ? 'Guardando…' : `${invitado ? 'Probar' : 'Registrar'} ${TIPOS[tipo].toLowerCase()} ↗`}
       </button>
     </form>
   );

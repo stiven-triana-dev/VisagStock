@@ -18,6 +18,7 @@ export const configPrueba: Config = {
   JWT_SECRETO: 'secreto-de-prueba-con-mas-de-32-caracteres',
   PORT: 0,
   NODE_ENV: 'test',
+  DEMO_ACTIVO: true,
 };
 
 async function conAdministrador(trabajo: (cliente: pg.Client) => Promise<void>) {

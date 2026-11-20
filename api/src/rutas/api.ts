@@ -8,7 +8,8 @@ import {
   emitirSesion,
   exigirSesion,
   limitarIntentos,
-  usuarioDeSesion,
+  sesionDe,
+  USUARIO_INVITADO,
 } from '../auth.js';
 import {
   cambiarMinimo,
@@ -38,16 +39,29 @@ export function rutasApi(pool: Pool, config: Config): Router {
       return;
     }
     emitirSesion(res, config, usuario);
-    res.json({ usuario });
+    res.json({ usuario, invitado: false });
+  });
+
+  api.get('/invitado', (_req, res) => {
+    res.json({ activo: config.DEMO_ACTIVO });
+  });
+
+  api.post('/sesion/invitado', limitarIntentos(30, 15 * 60 * 1000), (_req, res) => {
+    if (!config.DEMO_ACTIVO) {
+      res.status(404).json({ error: 'La cuenta de invitado no está activa' });
+      return;
+    }
+    emitirSesion(res, config, USUARIO_INVITADO, true);
+    res.json({ usuario: USUARIO_INVITADO, invitado: true });
   });
 
   api.get('/sesion', (req, res) => {
-    const usuario = usuarioDeSesion(req, config);
-    if (!usuario) {
+    const sesion = sesionDe(req, config);
+    if (!sesion) {
       res.status(401).json({ error: 'Sin sesión' });
       return;
     }
-    res.json({ usuario });
+    res.json(sesion);
   });
 
   api.delete('/sesion', (_req, res) => {
@@ -72,12 +86,16 @@ export function rutasApi(pool: Pool, config: Config): Router {
   });
 
   api.post('/movimientos', sesion, async (req, res) => {
-    const movimiento = await registrarMovimiento(pool, nuevoMovimiento.parse(req.body), String(res.locals.usuario));
-    res.status(201).json(movimiento);
+    const simulado = res.locals.invitado === true;
+    const datos = nuevoMovimiento.parse(req.body);
+    const movimiento = await registrarMovimiento(pool, datos, String(res.locals.usuario), simulado);
+    res.status(simulado ? 200 : 201).json({ ...movimiento, simulado });
   });
 
   api.put('/minimos', sesion, async (req, res) => {
-    res.json(await cambiarMinimo(pool, nuevoMinimo.parse(req.body)));
+    const simulado = res.locals.invitado === true;
+    const talla = await cambiarMinimo(pool, nuevoMinimo.parse(req.body), simulado);
+    res.json({ ...talla, simulado });
   });
 
   return api;

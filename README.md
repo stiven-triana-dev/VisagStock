@@ -6,6 +6,10 @@ La tienda en línea sabe qué productos existen y en qué tallas vienen, pero no
 quedan** de cada talla. VisagStock resuelve eso: lleva la cuenta de cada talla, guarda cada ingreso,
 despacho, devolución y baja con su motivo, y avisa cuando algo está por agotarse.
 
+**Pruébalo en línea:** [visagstock.onrender.com](https://visagstock.onrender.com) → pulsa **Entrar como
+invitado**. No necesitas contraseña y puedes probar todo; los cambios no se guardan. La primera vez puede
+tardar un minuto en abrir, porque el plan gratis de Render duerme el servidor cuando nadie lo usa.
+
 ![Resumen del inventario](docs/resumen.png)
 
 ## Qué hace
@@ -28,11 +32,13 @@ despacho, devolución y baja con su motivo, y avisa cuando algo está por agotar
   lo hizo. Se puede filtrar por producto, tipo y fechas.
 - **Nunca vende de más.** Si quedan 2 unidades y alguien intenta sacar 3, se rechaza. Esto funciona
   incluso si dos personas registran ventas **al mismo tiempo**.
-- **Solo entra el administrador**, con usuario y contraseña.
+- **Dos formas de entrar.** El **administrador** entra con usuario y contraseña y sus cambios se
+  guardan. El **invitado** entra con un botón, sin contraseña: puede usar todo y el servidor valida y
+  calcula cada movimiento de verdad, pero al final lo deshace, así que el inventario real no cambia.
 
-| Productos | Detalle y movimiento | En el celular |
-| --- | --- | --- |
-| ![Productos](docs/productos.png) | ![Detalle](docs/detalle.png) | ![Celular](docs/celular.png) |
+| Entrada (con invitado) | Productos | Detalle y movimiento | Historial en el celular |
+| --- | --- | --- | --- |
+| ![Entrada](docs/entrar.png) | ![Productos](docs/productos.png) | ![Detalle](docs/detalle.png) | ![Celular](docs/celular.png) |
 
 ![Kárdex con ingresos, despachos, devoluciones, bajas y ajustes](docs/movimientos.png)
 
@@ -77,6 +83,8 @@ Todas las rutas empiezan por `/api`. Las marcadas con 🔒 piden sesión.
 | --- | --- | --- |
 | GET | `/estado` | Responde `ok` (lo usa Render para saber si está viva) |
 | POST | `/sesion` | Inicia sesión (máximo 10 intentos cada 15 minutos) |
+| GET | `/invitado` | Dice si la cuenta de invitado está activa |
+| POST | `/sesion/invitado` | Entra como invitado, sin contraseña |
 | GET / DELETE | `/sesion` | Consulta o cierra la sesión |
 | GET 🔒 | `/resumen` | Cifras generales, alertas y últimos movimientos |
 | GET 🔒 | `/productos?buscar=&estado=&pagina=` | Productos con su stock por talla |
@@ -84,6 +92,8 @@ Todas las rutas empiezan por `/api`. Las marcadas con 🔒 piden sesión.
 | GET 🔒 | `/movimientos?productoId=&tipo=&desde=&hasta=` | Historial con filtros |
 | POST 🔒 | `/movimientos` | Registra un ingreso, despacho, devolución (con `condicion`: `buena` o `danada`), baja o ajuste |
 | PUT 🔒 | `/minimos` | Cambia el mínimo de una talla |
+
+Si quien hace el cambio es el invitado, la respuesta trae `"simulado": true` y nada se guarda.
 
 ## Correrlo en tu computador
 
@@ -101,6 +111,7 @@ Llena `api/.env`:
 | `DATABASE_URL` | La conexión a PostgreSQL (la misma de VisagShop) |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Con qué se entra (la contraseña debe tener al menos 10 caracteres) |
 | `JWT_SECRETO` | Un texto secreto largo (mínimo 32 caracteres) para firmar las sesiones |
+| `DEMO_ACTIVO` | `true` muestra el botón **Entrar como invitado**; con `false` (o sin definir) solo entra el administrador |
 | `TEST_DATABASE_URL` | Opcional: un PostgreSQL donde las pruebas puedan crear bases temporales |
 
 Luego, en dos terminales:
@@ -121,14 +132,17 @@ npm start         # arranca la versión compilada
 
 ## Pruebas
 
-- **API (26 pruebas).** Cada ejecución crea una base PostgreSQL temporal con productos de ejemplo,
+- **API (33 pruebas).** Cada ejecución crea una base PostgreSQL temporal con productos de ejemplo,
   aplica las migraciones, prueba y la borra al final. Se revisan la sesión, la cookie, el bloqueo
   de otros sitios, la búsqueda sin tildes, los cinco tipos de movimiento, que una devolución dañada
   quede registrada **sin** volver a la venta, las tallas que no son del producto, los datos mal
   formados y **ocho despachos simultáneos con solo cinco unidades**: se aceptan exactamente cinco.
-- **Pantallas (11 pruebas).** El formulario muestra cuánto quedará, no deja despachar ni dar de baja
+  También se revisa que el invitado entre sin contraseña, que sus movimientos y mínimos **no se
+  guarden** pero sí se validen (no puede despachar lo que no hay) y que no pueda entrar si
+  `DEMO_ACTIVO` está apagado.
+- **Pantallas (12 pruebas).** El formulario muestra cuánto quedará, no deja despachar ni dar de baja
   más de lo que hay, exige el estado de la prenda en una devolución, envía bien los datos y muestra
-  los errores de la API. También se prueban los textos en español ("queda 1 unidad", "1.200 unidades").
+  los errores de la API. Con el invitado, el botón dice **Probar** y avisa que no se guarda. También se prueban los textos en español ("queda 1 unidad", "1.200 unidades").
 
 Si `TEST_DATABASE_URL` no está definida, las pruebas de la API se saltan en vez de fallar.
 
@@ -136,7 +150,9 @@ Si `TEST_DATABASE_URL` no está definida, las pruebas de la API se saltan en vez
 
 El archivo `render.yaml` ya trae la configuración. En Render: **New → Blueprint**, se elige este
 repositorio y se llenan `DATABASE_URL` (la misma de VisagShop en Neon), `ADMIN_USERNAME` y
-`ADMIN_PASSWORD`. El secreto de las sesiones lo genera Render solo.
+`ADMIN_PASSWORD`. El secreto de las sesiones lo genera Render solo y `DEMO_ACTIVO` ya viene en `true`.
+
+En línea: [visagstock.onrender.com](https://visagstock.onrender.com).
 
 ## Qué aprendí
 
@@ -163,6 +179,11 @@ repositorio y se llenan `DATABASE_URL` (la misma de VisagShop en Neon), `ADMIN_U
    devolución dañada), se rechaza con reglas `CHECK`.
 8. **Pruebas contra una base real.** Simular la base no hubiera detectado el problema de los `NULL`
    ni el de las ventas simultáneas. Por eso las pruebas usan PostgreSQL de verdad.
+9. **Una demostración que no ensucia los datos.** Para que un reclutador pudiera probar el proyecto sin
+   mi contraseña, creé la cuenta de invitado. En vez de escribir un código aparte que "imite" los
+   movimientos, uso el mismo código real dentro de una transacción y al final hago `ROLLBACK` en lugar
+   de `COMMIT`. Así el invitado ve exactamente las mismas validaciones y cálculos, y la base queda
+   como estaba.
 
 ## Problemas que tuve y cómo los resolví
 
@@ -177,4 +198,6 @@ repositorio y se llenan `DATABASE_URL` (la misma de VisagShop en Neon), `ADMIN_U
 | Textos con errores: "Ajuste guardada", "quedan 1 unidad". | Se armaban las frases pegando palabras sin revisar género ni número. | Frases completas para cada tipo y una función `quedan()` que concuerda el verbo; tiene su propia prueba. |
 | Una prenda devuelta **dañada** volvía a quedar disponible para la venta. | Solo existían "entrada" y "salida": cualquier devolución se registraba como entrada y sumaba al stock. | Los tipos pasaron a nombres de kárdex (Ingreso, Despacho, Ajuste) y se añadieron **Devolución**, que pide el estado de la prenda (en buen estado suma; dañada no suma pero queda registrada), y **Baja**, para prendas dañadas en la tienda. El resumen muestra cuántas unidades se dañaron en la semana. |
 | VisagStock no se parecía a VisagShop: tenía la barra negra y acentos verdes que la tienda no usa. | Copié los códigos de color de los archivos de la tienda, pero ahí hay estilos viejos que ya no se ven. Lo que de verdad se ve en VisagShop es neutro: crema, gris y casi negro. | Medí los colores directamente en la tienda en línea, elemento por elemento, y copié cómo usa los colores: encabezado claro con el logo redondo y el nombre como en la página de pago de la tienda (VISAG en negro, STOCK en azul y debajo INVENTARIO / COLOMBIA), fondo crema, textos y botones casi negros, filtros en forma de píldora y ningún verde: solo se usan colores para avisar (ámbar para stock bajo, rojo para agotado). Ahora las dos se ven como parte de la misma marca. |
+| En el celular las tablas se cortaban: en el historial no se veían el tipo, el cambio ni lo que quedaba sin deslizar hacia el lado. | Una tabla de 8 columnas no cabe en 360 px; solo se podía ver deslizando, y casi nadie lo nota. | En pantallas pequeñas cada fila se muestra como una **tarjeta** (producto y cambio arriba, talla y lo que queda en medio, fecha abajo) usando solo CSS. Revisé las 5 pantallas en 14 anchos, de 320 a 2560 px, buscando cualquier elemento que se saliera. |
+| Revisando eso, una página de prueba "no ocupaba toda la pantalla". | Era la ventana de pruebas automáticas, fijada en 1280 px, no la página. Pero sirvió para ver que en pantallas muy anchas el encabezado y el contenido no estaban alineados. | El encabezado y el contenido ahora comparten el mismo ancho máximo (1320 px), como en VisagShop. |
 | En el buscador se borraba el espacio mientras se escribía. | Al actualizar la dirección, el texto se reemplazaba por la versión sin espacios del final. | Solo se reemplaza el texto si de verdad cambió la búsqueda. |

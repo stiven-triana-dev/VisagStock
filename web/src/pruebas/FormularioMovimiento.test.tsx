@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FormularioMovimiento } from '../componentes/FormularioMovimiento';
+import { ContextoSesion, type ValorSesion } from '../sesion';
 import type { Movimiento, ProductoStock } from '../tipos';
 
 const producto: ProductoStock = {
@@ -48,6 +49,22 @@ function cuerpoEnviado(pedido: ReturnType<typeof responder>) {
   return JSON.parse(String(opciones?.body)) as unknown;
 }
 
+function mostrar(alGuardar: (movimiento: Movimiento) => void = () => undefined, invitado = false) {
+  const sesion: ValorSesion = {
+    usuario: invitado ? 'invitado' : 'admin',
+    invitado,
+    comprobando: false,
+    entrar: async () => undefined,
+    entrarComoInvitado: async () => undefined,
+    salir: async () => undefined,
+  };
+  return render(
+    <ContextoSesion.Provider value={sesion}>
+      <FormularioMovimiento producto={producto} alGuardar={alGuardar} />
+    </ContextoSesion.Provider>,
+  );
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -55,7 +72,7 @@ afterEach(() => {
 describe('FormularioMovimiento', () => {
   it('muestra cuánto quedará antes de registrar', async () => {
     const usuario = userEvent.setup();
-    render(<FormularioMovimiento producto={producto} alGuardar={() => undefined} />);
+    mostrar();
     await usuario.click(screen.getByRole('radio', { name: /^M/ }));
     await usuario.type(screen.getByLabelText('Cantidad'), '4');
     expect(screen.getByText('Quedarán 9 unidades.')).toBeInTheDocument();
@@ -64,7 +81,7 @@ describe('FormularioMovimiento', () => {
   it('no deja despachar más unidades de las que hay', async () => {
     const usuario = userEvent.setup();
     const pedido = responder(201, {});
-    render(<FormularioMovimiento producto={producto} alGuardar={() => undefined} />);
+    mostrar();
     await usuario.click(screen.getByLabelText('Despacho'));
     await usuario.type(screen.getByLabelText('Cantidad'), '3');
     await usuario.type(screen.getByLabelText('Motivo'), 'Venta en tienda');
@@ -75,7 +92,7 @@ describe('FormularioMovimiento', () => {
 
   it('una baja tampoco puede superar el stock', async () => {
     const usuario = userEvent.setup();
-    render(<FormularioMovimiento producto={producto} alGuardar={() => undefined} />);
+    mostrar();
     await usuario.click(screen.getByLabelText('Baja'));
     await usuario.type(screen.getByLabelText('Cantidad'), '5');
     expect(screen.getByText('Solo quedan 2 unidades en talla S.')).toBeInTheDocument();
@@ -83,7 +100,7 @@ describe('FormularioMovimiento', () => {
 
   it('una devolución pide el estado de la prenda antes de registrarse', async () => {
     const usuario = userEvent.setup();
-    render(<FormularioMovimiento producto={producto} alGuardar={() => undefined} />);
+    mostrar();
     await usuario.click(screen.getByLabelText('Devolución'));
     await usuario.type(screen.getByLabelText('Cantidad'), '1');
     await usuario.type(screen.getByLabelText('Motivo'), 'Cambio de talla');
@@ -100,7 +117,7 @@ describe('FormularioMovimiento', () => {
       201,
       movimiento({ tipo: 'devolucion', condicion: 'danada', cantidad: 0, stockResultante: 5, motivo: 'Costura rota' }),
     );
-    render(<FormularioMovimiento producto={producto} alGuardar={() => undefined} />);
+    mostrar();
     await usuario.click(screen.getByLabelText('Devolución'));
     await usuario.click(screen.getByLabelText('Dañada'));
     await usuario.click(screen.getByRole('radio', { name: /^M/ }));
@@ -131,7 +148,7 @@ describe('FormularioMovimiento', () => {
       201,
       movimiento({ tipo: 'ajuste', unidades: 4, cantidad: -1, stockResultante: 4, motivo: 'Conteo físico' }),
     );
-    render(<FormularioMovimiento producto={producto} alGuardar={alGuardar} />);
+    mostrar(alGuardar);
     await usuario.click(screen.getByLabelText('Ajuste'));
     await usuario.click(screen.getByRole('radio', { name: /^M/ }));
     await usuario.type(screen.getByLabelText('Unidades contadas'), '4');
@@ -153,11 +170,28 @@ describe('FormularioMovimiento', () => {
   it('muestra el error que responde la API', async () => {
     const usuario = userEvent.setup();
     responder(409, { error: 'No hay suficiente stock: quedan 1' });
-    render(<FormularioMovimiento producto={producto} alGuardar={() => undefined} />);
+    mostrar();
     await usuario.click(screen.getByLabelText('Despacho'));
     await usuario.type(screen.getByLabelText('Cantidad'), '1');
     await usuario.type(screen.getByLabelText('Motivo'), 'Venta en tienda');
     await usuario.click(screen.getByRole('button', { name: /registrar despacho/i }));
     expect(await screen.findByRole('alert')).toHaveTextContent('No hay suficiente stock: quedan 1');
+  });
+
+  it('como invitado prueba el movimiento y avisa que no se guarda', async () => {
+    const usuario = userEvent.setup();
+    const alGuardar = vi.fn();
+    responder(200, movimiento({ cantidad: 3, unidades: 3, stockResultante: 8, simulado: true, usuario: 'invitado' }));
+    mostrar(alGuardar, true);
+    await usuario.click(screen.getByRole('radio', { name: /^M/ }));
+    await usuario.type(screen.getByLabelText('Cantidad'), '3');
+    await usuario.type(screen.getByLabelText('Motivo'), 'Compra a proveedor');
+    await usuario.click(screen.getByRole('button', { name: /probar ingreso/i }));
+
+    expect(
+      await screen.findByText('Prueba correcta. Así quedaría la talla M: 8 unidades. Como invitado, no se guarda.'),
+    ).toBeInTheDocument();
+    expect(alGuardar).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Cantidad')).toHaveValue(3);
   });
 });

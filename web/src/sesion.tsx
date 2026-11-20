@@ -1,40 +1,60 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { pedir, SESION_VENCIDA } from './api';
 
-interface ValorSesion {
+interface Sesion {
+  usuario: string;
+  invitado: boolean;
+}
+
+export interface ValorSesion {
   usuario: string | null;
+  invitado: boolean;
   comprobando: boolean;
   entrar: (usuario: string, clave: string) => Promise<void>;
+  entrarComoInvitado: () => Promise<void>;
   salir: () => Promise<void>;
 }
 
-const ContextoSesion = createContext<ValorSesion | null>(null);
+export const ContextoSesion = createContext<ValorSesion | null>(null);
 
 export function ProveedorSesion({ children }: { children: ReactNode }) {
-  const [usuario, setUsuario] = useState<string | null>(null);
+  const [sesion, setSesion] = useState<Sesion | null>(null);
   const [comprobando, setComprobando] = useState(true);
 
   useEffect(() => {
-    pedir<{ usuario: string }>('/sesion')
-      .then((datos) => setUsuario(datos.usuario))
-      .catch(() => setUsuario(null))
+    pedir<Sesion>('/sesion')
+      .then(setSesion)
+      .catch(() => setSesion(null))
       .finally(() => setComprobando(false));
-    const alVencer = () => setUsuario(null);
+    const alVencer = () => setSesion(null);
     window.addEventListener(SESION_VENCIDA, alVencer);
     return () => window.removeEventListener(SESION_VENCIDA, alVencer);
   }, []);
 
   const entrar = useCallback(async (nombre: string, clave: string) => {
-    const datos = await pedir<{ usuario: string }>('/sesion', { metodo: 'POST', cuerpo: { usuario: nombre, clave } });
-    setUsuario(datos.usuario);
+    setSesion(await pedir<Sesion>('/sesion', { metodo: 'POST', cuerpo: { usuario: nombre, clave } }));
+  }, []);
+
+  const entrarComoInvitado = useCallback(async () => {
+    setSesion(await pedir<Sesion>('/sesion/invitado', { metodo: 'POST' }));
   }, []);
 
   const salir = useCallback(async () => {
     await pedir<void>('/sesion', { metodo: 'DELETE' }).catch(() => undefined);
-    setUsuario(null);
+    setSesion(null);
   }, []);
 
-  const valor = useMemo(() => ({ usuario, comprobando, entrar, salir }), [usuario, comprobando, entrar, salir]);
+  const valor = useMemo(
+    () => ({
+      usuario: sesion?.usuario ?? null,
+      invitado: sesion?.invitado ?? false,
+      comprobando,
+      entrar,
+      entrarComoInvitado,
+      salir,
+    }),
+    [sesion, comprobando, entrar, entrarComoInvitado, salir],
+  );
   return <ContextoSesion.Provider value={valor}>{children}</ContextoSesion.Provider>;
 }
 

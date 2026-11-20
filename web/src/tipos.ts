@@ -35,6 +35,7 @@ export interface Movimiento {
   motivo: string;
   usuario: string;
   fecha: string;
+  simulado?: boolean;
 }
 
 export interface Pagina {
