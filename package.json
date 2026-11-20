@@ -1,0 +1,17 @@
+{
+  "name": "visagstock",
+  "private": true,
+  "description": "Inventario por talla de VisagShop: API en Node + TypeScript y pantallas en React + TypeScript",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "workspaces": ["api", "web"],
+  "scripts": {
+    "dev:api": "npm run dev -w api",
+    "dev:web": "npm run dev -w web",
+    "build": "npm run build -w web && npm run build -w api",
+    "start": "npm start -w api",
+    "test": "npm run test --workspaces",
+    "typecheck": "npm run typecheck --workspaces"
+  }
+}
