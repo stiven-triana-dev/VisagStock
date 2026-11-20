@@ -18,7 +18,7 @@ export function Marco() {
         <NavLink to="/" className="marca" aria-label="VisagStock, ir al resumen">
           <img className="marca-logo" src="/logo-visagshop.png" alt="" width="40" height="40" />
           <span className="marca-texto">
-            VISAG<span>STOCK</span>
+            VISAGSTOCK<small>®</small>
           </span>
         </NavLink>
         <nav className="menu" aria-label="Principal">

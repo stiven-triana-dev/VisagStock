@@ -9,8 +9,11 @@
   --borde: #c9c8c0;
   --oscuro: #252622;
   --oscuro-hover: #494a43;
-  --salvia: #4b6651;
-  --salvia-texto: #66715f;
+  --foco: #4f6249;
+  --etiqueta: #676761;
+  --chip: #585a53;
+  --chip-borde: #e5e5de;
+  --chip-activo: #292a26;
   --nav: #4c4c47;
   --rojo: #9a2f28;
   --rojo-claro: #fbeeed;
@@ -60,7 +63,8 @@ h2 {
 
 h1 {
   font-size: clamp(32px, 6vw, 56px);
-  font-weight: 600;
+  font-weight: 500;
+  letter-spacing: -0.075em;
 }
 
 h1 em,
@@ -68,7 +72,6 @@ h2 em {
   font-family: var(--serif);
   font-weight: 400;
   letter-spacing: -0.02em;
-  color: var(--salvia);
 }
 
 h2 {
@@ -78,7 +81,7 @@ h2 {
 }
 
 :focus-visible {
-  outline: 2px solid var(--salvia);
+  outline: 2px solid var(--foco);
   outline-offset: 3px;
 }
 
@@ -111,7 +114,7 @@ h2 {
   font-weight: 800;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--salvia-texto);
+  color: var(--etiqueta);
 }
 
 .tenue {
@@ -148,8 +151,12 @@ h2 {
   letter-spacing: -0.085em;
 }
 
-.marca-texto span {
-  color: var(--salvia);
+.marca-texto small {
+  margin-left: 3px;
+  font-size: 9px;
+  vertical-align: top;
+  letter-spacing: 0;
+  color: #9c9c91;
 }
 
 .marca-logo {
@@ -342,8 +349,9 @@ h2 {
 }
 
 .insignia-disponible {
-  background: var(--verde-claro);
-  color: var(--verde);
+  background: #f8f8f3;
+  color: #66685e;
+  border-color: #d9d8d0;
 }
 
 .insignia-bajo {
@@ -478,7 +486,7 @@ a.cifra:hover {
 .semana h2 {
   margin: 0;
   font-size: 15px;
-  color: #b9c69b;
+  color: var(--white);
 }
 
 .semana-datos {
@@ -617,7 +625,7 @@ a.cifra:hover {
 }
 
 .tipo-ajuste {
-  color: #5a3fa0;
+  color: var(--muted);
 }
 
 .condicion {
@@ -647,7 +655,9 @@ a.cifra:hover {
 }
 
 .buscador input {
-  background: var(--white);
+  min-height: 53px;
+  background: #f8f8f5;
+  border-color: #e7e6df;
 }
 
 .chips {
@@ -657,23 +667,26 @@ a.cifra:hover {
 }
 
 .chip {
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--borde);
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--chip-borde);
+  border-radius: 100px;
   background: var(--white);
+  color: var(--chip);
   font: inherit;
-  font-weight: 700;
-  font-size: 13px;
+  font-weight: 500;
+  font-size: 12px;
   cursor: pointer;
 }
 
 .chip:hover {
-  border-color: var(--oscuro);
+  border-color: var(--chip-activo);
+  color: var(--ink);
 }
 
 .chip[aria-pressed='true'] {
-  background: var(--oscuro);
-  border-color: var(--oscuro);
+  background: var(--chip-activo);
+  border-color: var(--chip-activo);
   color: var(--white);
 }
 
@@ -864,7 +877,7 @@ a.cifra:hover {
 .formulario {
   background: var(--white);
   border: 1px solid var(--line);
-  border-top: 3px solid var(--salvia);
+  border-top: 3px solid var(--oscuro);
   padding: 20px;
   position: sticky;
   top: 84px;
@@ -913,7 +926,7 @@ fieldset {
 }
 
 .segmento:has(input:focus-visible) {
-  outline: 2px solid var(--salvia);
+  outline: 2px solid var(--foco);
   outline-offset: 3px;
 }
 
