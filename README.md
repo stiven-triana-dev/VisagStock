@@ -36,9 +36,9 @@ despacho, devolución y baja con su motivo, y avisa cuando algo está por agotar
 
 ![Kárdex con ingresos, despachos, devoluciones, bajas y ajustes](docs/movimientos.png)
 
-## Qué usamos y por qué
+## Qué use y por qué
 
-| Herramienta | Para qué | Por qué la elegimos |
+| Herramienta | Para qué | Por qué la elegi |
 | --- | --- | --- |
 | **TypeScript** (API y pantallas) | Todo el código | Avisa los errores *antes* de ejecutar: si la API cambia la forma de un dato, la pantalla no compila hasta corregirla. |
 | **Node.js + Express 5** | La API | Es lo mismo que usa VisagShop, así que el conocimiento se reutiliza. Express 5 ya maneja los errores de funciones `async` sin código extra. |
@@ -138,7 +138,7 @@ El archivo `render.yaml` ya trae la configuración. En Render: **New → Bluepri
 repositorio y se llenan `DATABASE_URL` (la misma de VisagShop en Neon), `ADMIN_USERNAME` y
 `ADMIN_PASSWORD`. El secreto de las sesiones lo genera Render solo.
 
-## Lo que aprendimos
+## Lo que aprendi
 
 1. **Bloquear la fila antes de restar.** Si dos ventas leen "quedan 5" al mismo tiempo, las dos
    restan y el stock queda mal. Con `SELECT … FOR UPDATE` dentro de una transacción, la segunda venta
@@ -164,7 +164,7 @@ repositorio y se llenan `DATABASE_URL` (la misma de VisagShop en Neon), `ADMIN_U
 8. **Pruebas contra una base real.** Simular la base no hubiera detectado el problema de los `NULL`
    ni el de las ventas simultáneas. Por eso las pruebas usan PostgreSQL de verdad.
 
-## Problemas que tuvimos y cómo los resolvimos
+## Problemas que tuve y cómo los resolvi
 
 | Problema | Por qué pasaba | Cómo lo resolvimos |
 | --- | --- | --- |
