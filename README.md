@@ -36,9 +36,9 @@ despacho, devolución y baja con su motivo, y avisa cuando algo está por agotar
 
 ![Kárdex con ingresos, despachos, devoluciones, bajas y ajustes](docs/movimientos.png)
 
-## Qué use y por qué
+## Qué usé y por qué
 
-| Herramienta | Para qué | Por qué la elegi |
+| Herramienta | Para qué | Por qué la elegí |
 | --- | --- | --- |
 | **TypeScript** (API y pantallas) | Todo el código | Avisa los errores *antes* de ejecutar: si la API cambia la forma de un dato, la pantalla no compila hasta corregirla. |
 | **Node.js + Express 5** | La API | Es lo mismo que usa VisagShop, así que el conocimiento se reutiliza. Express 5 ya maneja los errores de funciones `async` sin código extra. |
@@ -132,13 +132,13 @@ npm start         # arranca la versión compilada
 
 Si `TEST_DATABASE_URL` no está definida, las pruebas de la API se saltan en vez de fallar.
 
-## Publicarlo en Render
+## Render
 
 El archivo `render.yaml` ya trae la configuración. En Render: **New → Blueprint**, se elige este
 repositorio y se llenan `DATABASE_URL` (la misma de VisagShop en Neon), `ADMIN_USERNAME` y
 `ADMIN_PASSWORD`. El secreto de las sesiones lo genera Render solo.
 
-## Lo que aprendi
+## Que aprendí
 
 1. **Bloquear la fila antes de restar.** Si dos ventas leen "quedan 5" al mismo tiempo, las dos
    restan y el stock queda mal. Con `SELECT … FOR UPDATE` dentro de una transacción, la segunda venta
@@ -164,9 +164,9 @@ repositorio y se llenan `DATABASE_URL` (la misma de VisagShop en Neon), `ADMIN_U
 8. **Pruebas contra una base real.** Simular la base no hubiera detectado el problema de los `NULL`
    ni el de las ventas simultáneas. Por eso las pruebas usan PostgreSQL de verdad.
 
-## Problemas que tuve y cómo los resolvi
+## Problemas que tuve y cómo los resolví
 
-| Problema | Por qué pasaba | Cómo lo resolvimos |
+| Problema | Por qué pasaba | Cómo lo resolví |
 | --- | --- | --- |
 | Al compilar, el servidor no encontraba las migraciones. | TypeScript solo copia archivos `.ts`; los `.sql` se quedaban por fuera de `dist`. | El comando `build` de la API ahora copia la carpeta `migraciones` después de compilar. |
 | Al entrar en modo desarrollo salía **"Origen no permitido"**. | Vite reenvía `/api` al servidor y cambia el `Host`, entonces la protección contra otros sitios veía un origen distinto. | Se ajustó solo el reenvío de Vite para que use el mismo origen. La API sigue igual de estricta. |
