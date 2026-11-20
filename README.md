@@ -138,7 +138,7 @@ El archivo `render.yaml` ya trae la configuración. En Render: **New → Bluepri
 repositorio y se llenan `DATABASE_URL` (la misma de VisagShop en Neon), `ADMIN_USERNAME` y
 `ADMIN_PASSWORD`. El secreto de las sesiones lo genera Render solo.
 
-## Que aprendí
+## Qué aprendí
 
 1. **Bloquear la fila antes de restar.** Si dos ventas leen "quedan 5" al mismo tiempo, las dos
    restan y el stock queda mal. Con `SELECT … FOR UPDATE` dentro de una transacción, la segunda venta
@@ -176,4 +176,5 @@ repositorio y se llenan `DATABASE_URL` (la misma de VisagShop en Neon), `ADMIN_U
 | Con todo en cero, el resumen decía "¡Todo en orden!". | Solo se revisaba si había alertas, no si había unidades. | Si no hay unidades, ahora invita a registrar el primer ingreso. |
 | Textos con errores: "Ajuste guardada", "quedan 1 unidad". | Se armaban las frases pegando palabras sin revisar género ni número. | Frases completas para cada tipo y una función `quedan()` que concuerda el verbo; tiene su propia prueba. |
 | Una prenda devuelta **dañada** volvía a quedar disponible para la venta. | Solo existían "entrada" y "salida": cualquier devolución se registraba como entrada y sumaba al stock. | Los tipos pasaron a nombres de kárdex (Ingreso, Despacho, Ajuste) y se añadieron **Devolución**, que pide el estado de la prenda (en buen estado suma; dañada no suma pero queda registrada), y **Baja**, para prendas dañadas en la tienda. El resumen muestra cuántas unidades se dañaron en la semana. |
+| VisagStock no se parecía a VisagShop: tenía la barra negra y un verde lima muy fuerte. | Usaba los mismos códigos de color de la tienda, pero repartidos distinto: el lima, que en VisagShop casi no aparece, era el color principal. | Revisé la tienda en línea y copié cómo usa los colores: encabezado claro con el logo redondo, fondo crema, botones casi negros y detalles en verde salvia. Ahora las dos se ven como parte de la misma marca. |
 | En el buscador se borraba el espacio mientras se escribía. | Al actualizar la dirección, el texto se reemplazaba por la versión sin espacios del final. | Solo se reemplaza el texto si de verdad cambió la búsqueda. |

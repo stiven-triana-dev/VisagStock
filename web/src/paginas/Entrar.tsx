@@ -24,6 +24,7 @@ export function Entrar() {
   return (
     <main className="entrar">
       <section className="entrar-panel" aria-labelledby="titulo-entrar">
+        <img className="entrar-logo" src="/logo-visagshop.png" alt="" width="56" height="56" />
         <p className="kicker">VisagShop · Inventario</p>
         <h1 id="titulo-entrar">
           Visag<em>Stock</em>
